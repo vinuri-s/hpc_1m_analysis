@@ -1,0 +1,14 @@
+landlab>=2.7
+numpy
+scipy
+rasterio
+matplotlib
+pandas
+openpyxl
+# richdem is NOT required. It was tried and rejected for this project:
+# on Windows it either fails to build from source (richdem 0.3.4 on PyPI
+# bundles an old pybind11 incompatible with modern Python) or, via
+# conda-forge, installs but crashes at runtime on this grid's boundary
+# layout. Flow routing instead uses FlowAccumulator + LakeMapperBarnes
+# (both part of landlab core, no extra dependency), which was verified
+# to run cleanly on the full 7.2M-node 1 m grid.
