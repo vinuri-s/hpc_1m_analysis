@@ -61,8 +61,7 @@ def run_in_big_stack(func, *args, **kwargs):
         raise box["error"]
     if "result" not in box:
         raise RuntimeError("Worker thread died without returning a result "
-                            "(still crashing even with a 1 GiB stack -- "
-                            "tell Claude).")
+                            "(still crashing even with a 1 GiB stack).")
     return box["result"]
 
 

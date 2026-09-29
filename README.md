@@ -1,76 +1,179 @@
-# 1 m native-resolution sensitivity sweep (HPC package)
+# Native 1 m resolution sensitivity analysis
 
-This reproduces the paper's Section 4 sensitivity analysis (SPIM vs SPACE,
-7 log-spaced basalt erodibility values from the Thor database) directly on
-the **native 1 m LiDAR DEM**, with no downsampling. The version already in
-the paper uses a 15 m block-mean-resampled grid (180x178 = 32,040 nodes)
-because that's what fit inside a sandboxed session with per-call wall-clock
-limits. This package is meant to run on your own machine/HPC to test
-whether the paper's conclusions are resolution-dependent.
+Code for the native-resolution (1 m) landscape evolution sensitivity
+analysis reported in Section 4 of:
 
-## What's identical to the paper's 15 m run
+> Piyathilake, V., Hughes, M. W., and Wilson, M.: Quantifying Erodibility
+> in Stream Power Incision Models: Practical Guidance and Model Response
+> Dynamics, *Earth Surface Dynamics* (in review).
 
-- K values (7, log-spaced): `3.024e-09, 1.191e-08, 4.693e-08, 1.849e-07, 7.283e-07, 2.869e-06, 1.130e-05` yr⁻¹, spanning UCS = 217.02 MPa (99th percentile) to 3.55 MPa (weakest measured) for basalt in the Thor database (n=341), converted via K ∝ UCS⁻², anchored to Quye-Sawyer et al. (2020). Note: the raw database maximum (976.81 MPa) is deliberately excluded -- it and the next-highest value (373.9 MPa) both trace to a single study (Teymen and Menguec 2020) at rebound numbers (R=99, R=84.6) at/near Schmidt-hammer saturation, isolated from the rest of the distribution and almost certainly a regression-extrapolation artifact rather than real rock strength. The 99th percentile sits right at the edge of the genuine, multi-source-corroborated cluster (~130-230 MPa, consistent with published basalt UCS ranges of 100-300 MPa).
-- `m_sp = 0.5`, `n_sp = 1.0`
-- `K_sed = 10 x K_br` in SPACE (per your original instruction)
-- Uplift rate `U = 8.0e-6 m/yr` (calibrated from the real DEM's channel steepness at 15 m -- see note in `03_run_one_1m.py` if you'd rather recalibrate from the 1 m network)
-- Single-outlet boundary conditions (all watershed-exterior + true grid-perimeter nodes closed except the lowest-elevation valid perimeter node)
-- Total simulated time target: 1.0 Myr (the *timestep and number of steps used to reach it* are NOT fixed yet -- see "Required first step" below)
+The analysis compares two landscape evolution model formulations —
+detachment-limited (SPIM, `StreamPowerEroder`) and sediment-flux-dependent
+(SPACE, `SpaceLargeScaleEroder`), both from
+[Landlab](https://landlab.readthedocs.io/) — run on a real 1 m LiDAR
+digital elevation model (DEM) of a basalt catchment near Little River,
+Banks Peninsula, New Zealand, across seven log-spaced bedrock erodibility
+($K_\mathrm{br}$) values spanning the strength range of basalt in the
+Thor rock-strength database (Haag et al., 2025). Fourteen
+model/$K_\mathrm{br}$ configurations are each run for 1000 years of
+model time at a 10-year timestep, at the DEM's native 1 m grid resolution
+(no spatial resampling), directly reproducing the figures and summary
+tables in Section 4 and its supplement.
 
-## What's different
+## What this reproduces
 
-- Grid: **2670 x 2700 = 7,209,000 total nodes** at 1 m, vs 32,040 at 15 m -- roughly **225x** more nodes. No block-mean resampling anywhere.
-- Flow routing: **`FlowAccumulator` (plain D8) + `LakeMapperBarnes`** (fills pits and redirects/reaccumulates flow around them). This is NOT what the 15 m paper run uses (`DepressionFinderAndRouter`), and does NOT use richdem/`PriorityFloodFlowRouter`. Both of those were tried and rejected for this specific project:
-  - **richdem**: on Windows, `pip install richdem` fails to compile (richdem 0.3.4 on PyPI bundles an old `pybind11` incompatible with modern Python's C API -- installing MSVC Build Tools does NOT fix this, it's a real source incompatibility). The conda-forge build installs and imports fine, but crashes at runtime (`IndexError: Out of bounds on buffer access`) specifically on this grid's boundary-condition layout.
-  - **DepressionFinderAndRouter**: crashes natively at 1 m's node count (a raw Windows access-violation-style crash, not a catchable Python exception) -- it's not built for grids this large.
-  - **LakeMapperBarnes** is part of landlab core (no extra dependency, nothing to install beyond `landlab` itself) and was verified to run cleanly through 100 test steps on the full 7.2M-node grid with no crash and no NaNs.
+| Script | Output figure(s) | Paper figure label |
+|---|---|---|
+| `05_ucs_distribution.py` | `fig_ucs_distribution_1m.png/.pdf` | `fig:sens_ucs_dist` |
+| `04_make_figures_1kyr.py` | `fig_sensitivity_timeseries_1kyr.png` | `fig:sens_timeseries` |
+| `04_make_figures_1kyr.py` | `fig_diffmaps_by_K_1kyr.png` | `fig:sens_diffmaps` |
+| `04_make_figures_1kyr.py` | `fig_diffmaps_structural_1kyr.png` | `fig:sens_structural` |
+| `06_sediment_diagnostics_1kyr.py` | `fig_soil_depth_maps_1kyr.png` | `fig:sens_soil_depth` (supplement) |
+| `06_sediment_diagnostics_1kyr.py` | `fig_sediment_flux_soil_ts_1kyr.png` | `fig:sens_sediment_flux` (supplement) |
+| `07_channel_profiles_1kyr.py` | `fig_channel_profiles_1kyr.png` | `fig:sens_channel_profiles` (supplement) |
+| `09_slope_area_1kyr.py` | `fig_slope_area_1kyr.png` | `fig:sens_slope_area` (supplement) |
+| `08_final_state_maps_1kyr.py` | `fig_final_state_maps_1kyr.png` | `fig:sens_final_state` (supplement) |
 
-## Required first step: benchmark before committing to a real run
+The sensitivity-configuration summary table (`tab:sens_summary`) and the
+SPACE eroded-volume table (`tab:sens_volume`) are compiled from the
+`results_1kyr_dt10/*_log.json` files written by `03_run_one_1m_1kyr.py`.
 
-**Do not just edit `DT`/`N_STEPS_TARGET` in `03_run_one_1m.py` and launch the full sweep.** Raw flow-routing at 7.2M nodes is slow -- in testing, a single `FlowAccumulator` step alone (before any depression handling) took over 30 seconds. At the original plan (2000 steps of 500 yr), that's 16+ hours *per config*, and with 14 configs run sequentially on one machine, that's over a week.
+Other figures in the paper (catchment-overview and location maps, the
+conceptual/schematic diagrams, and the coarser 15 m sensitivity run used
+elsewhere in the manuscript) are produced outside this package and are
+not covered here.
 
-Run `test_lakemapper_1m.py` first:
+## Model configuration
+
+- Seven log-spaced $K_\mathrm{br}$ values (yr$^{-1}$): `3.024e-09,
+  1.191e-08, 4.693e-08, 1.849e-07, 7.283e-07, 2.869e-06, 1.130e-05`,
+  spanning basalt UCS = 217.0 MPa (99th percentile of n=341 Thor
+  measurements, used as the resistant anchor) to 3.55 MPa (database
+  minimum, erodible anchor), converted via $K \propto \mathrm{UCS}^{-2}$
+  and anchored to the independent estimate of Quye-Sawyer et al. (2020).
+  Two Schmidt-hammer-saturation outliers (976.8 and 373.9 MPa, both from
+  Teymen and Mengüç, 2020) are excluded as regression-extrapolation
+  artifacts rather than genuine rock-strength measurements; see
+  `05_ucs_distribution.py` for the full derivation.
+- SPACE sediment erodibility $K_\mathrm{sed} = 10 \times K_\mathrm{br}$.
+- $m_\mathrm{sp} = 0.5$, $n_\mathrm{sp} = 1.0$.
+- Uplift rate $U = 8.0\times10^{-6}$ m yr$^{-1}$.
+- Single-outlet boundary conditions: all watershed-exterior nodes and the
+  true grid perimeter are closed except the lowest-elevation valid
+  perimeter node (fixed-value outlet).
+- Flow routing: `FlowAccumulator` (D8) + `LakeMapperBarnes` for
+  depression filling/redirection. `LakeMapperBarnes` was selected over
+  `DepressionFinderAndRouter` and richdem's `PriorityFloodFlowRouter`
+  because both failed to run reliably at this grid's node count
+  (~7.2 million nodes); `LakeMapperBarnes` is Landlab-native and was
+  verified stable on the full grid.
+- Timestep: `DT = 10` yr, `N_STEPS_TARGET = 100` (1000 yr total model
+  time).
+
+## Repository layout
+
 ```
-python test_lakemapper_1m.py
+01_setup_grid_1m.py            Load the 1 m DEM, build the valid-cell mask
+02_build_grid_1m.py             Build the Landlab grid, boundary conditions,
+                                 initial flow routing
+03_run_one_1m_1kyr.py           Run one (model, K) configuration; checkpointable
+04_make_figures_1kyr.py         Timeseries + elevation-difference figures
+05_ucs_distribution.py          Thor UCS distribution / K-sampling figure
+06_sediment_diagnostics_1kyr.py Soil-depth maps, sediment-flux time series
+07_channel_profiles_1kyr.py     Longitudinal profile + chi-plots
+08_final_state_maps_1kyr.py     Hillshaded final-elevation maps
+09_slope_area_1kyr.py           Binned slope-area regression per K
+run_all_1kyr_auto.ps1           Windows launcher for all 14 configs (memory-throttled)
+requirements.txt                Python dependencies
 ```
-This runs 100 short (10 yr) steps on the full 1 m grid using the same `FlowAccumulator`+`LakeMapperBarnes` routing as the real runner, prints per-step timing as it goes, and at the end prints extrapolated total-runtime estimates for both a larger-timestep plan (`DT=5000, N_STEPS_TARGET=200`, same 1 Myr total, 10x fewer routing calls) and the original plan (`DT=500, N_STEPS_TARGET=2000`). **Use those real numbers, not any estimate written in this README or in code comments, to decide what `DT`/`N_STEPS_TARGET` to actually use** -- edit the placeholder values in `03_run_one_1m.py` (clearly marked) once you know.
 
-Note: `StreamPowerEroder` and `SpaceLargeScaleEroder` both use implicit/semi-implicit solvers that remain numerically stable at large timesteps, so increasing `DT` well above 500 yr is a legitimate way to cut runtime, not a hack -- the trade-off is coarser temporal resolution (less precision on exactly when transitions between response regimes occur), not instability.
+## Input data (not included)
 
-## Computational-cost warning
+This package needs two input files, placed in the repository root, that
+are not distributed with the code:
 
-- **Runtime**: depends entirely on what `test_lakemapper_1m.py` measures on your hardware -- see above. Don't guess.
-- **Memory**: each `float64` node field is ~58 MB at this grid size. Landlab keeps several such fields per component (elevation, slope, receiver, drainage area, and for SPACE also soil depth, bedrock elevation, sediment flux, etc.) -- budget several GB per running config, more for SPACE than SPIM.
-- **Disk**: each snapshot saved is another ~58 MB; with `SNAPSHOT_EVERY=200` (or whatever you set it to after the benchmark) that's several snapshots/config, several hundred MB/config for SPIM and roughly double for SPACE (also saves soil depth) -- full output across all 14 configs could reach several tens of GB. Increase `SNAPSHOT_EVERY` in `03_run_one_1m.py` before running if disk is tight.
-- **OneDrive**: if this folder lives inside a OneDrive-synced path, pause OneDrive sync before running (Settings tray icon -> Pause syncing). Live syncing while scripts write large binary files (checkpoints, `.npz` results) has caused intermittent "file not found" errors in testing.
+- **`watershed_of_interest.tif`** — the 1 m LiDAR DEM of the case-study
+  catchment, clipped to the watershed extent. Sourced from Land
+  Information New Zealand's 1 m LiDAR DEM
+  (<https://data.linz.govt.nz/layer/121859-new-zealand-lidar-1m-dem/>),
+  licensed under CC BY 4.0.
+- **`Search tool.xlsx`** — the basalt subset of the Thor rock-strength
+  database (Haag et al., 2025), providing the 341 UCS measurements used
+  to derive the sampled $K_\mathrm{br}$ range in `05_ucs_distribution.py`.
 
-## How to run
+## Requirements
 
-1. `watershed_of_interest.tif` and `Search tool.xlsx` are already included in this folder.
-2. Create the conda environment (no richdem needed):
-   ```
-   conda create -n erodibility python=3.11 -y
-   conda activate erodibility
-   conda install -c conda-forge landlab numpy scipy rasterio matplotlib pandas openpyxl -y
-   ```
-   If `conda activate erodibility` errors with something about PowerShell not being recognized, run `conda init cmd.exe` once, then close and reopen Anaconda Prompt and try again. If you instead see `(erodibility)` appear in your prompt alongside a PowerShell error, that error is harmless noise (activation still worked) -- confirm with `where python` (should show a path containing `envs\erodibility`).
-3. Run setup once (cheap): `python 01_setup_grid_1m.py` then `python 02_build_grid_1m.py`. Check the printed diagnostics: exactly one `FIXED_VALUE` outlet node, drainage area close to the full watershed extent, and `Flow router used: FlowAccumulator+LakeMapperBarnes` with no crash/traceback.
-4. Run `test_lakemapper_1m.py` and use its output to set `DT`/`N_STEPS_TARGET` in `03_run_one_1m.py` (see "Required first step" above). Don't skip this.
-5. Run the full sweep with `run_all.py` (plain Python, works the same on Windows/Mac/Linux -- prefer this over `run_all_windows.bat`, which has a known bug in its retry-loop logic and shouldn't be used):
-   ```
-   python run_all.py
-   ```
-   It skips setup steps that already succeeded, runs all 14 model/K configs (resuming from checkpoint if interrupted), then all the figure scripts, and stops with a clear message if anything actually fails rather than looping uselessly.
-   - If you have several free CPU cores and want to speed things up by running configs in parallel instead of sequentially, open multiple Anaconda Prompt windows (each with `conda activate erodibility`) and run individual `python 03_run_one_1m.py <model> <kname>` calls directly, one per window, instead of `run_all.py`.
-   - If you have access to a Linux HPC with SLURM (in addition to or instead of this Windows machine), `submit_array.slurm` is available, but will need the same richdem-removal edits applied to work (it currently assumes the old routing setup) -- ask if you want this updated too.
-6. Once all 14 `results/{model}_{kname}.npz` + `_log.json` files exist (already done if you used `run_all.py`), the figure scripts run in this order:
-   - `python 04_make_figures_1m.py` -- core comparison figures (timeseries, diffmaps by K, structural diffmaps)
-   - `python 05_ucs_distribution.py` -- Thor basalt UCS histogram + K sampling/outlier-exclusion figure (doesn't depend on the sweep, can be run any time)
-   - `python 06_sediment_diagnostics.py` -- SPACE soil-depth maps, sediment-flux/soil-depth time series, mass-balance sanity check
-   - `python 07_channel_profiles.py` -- longitudinal profile + chi-plots for the trunk channel (re-routes flow on each snapshot; the trunk-tracing step uses a per-node Python loop, noticeably slower at 1 m than at 15 m)
-   - `python 08_final_state_maps.py` -- hillshaded final-elevation maps (actual topography, not differences)
-   - `python 09_slope_area.py` -- binned slope-area regression with fitted concavity/steepness index per K
+Python 3.11, with dependencies listed in `requirements.txt`:
 
-## What to send back
+```bash
+conda create -n erodibility python=3.11 -y
+conda activate erodibility
+conda install -c conda-forge landlab numpy scipy rasterio matplotlib pandas openpyxl -y
+```
 
-The `results/` folder (`.npz` and `_log.json` files -- `ckpt_*.pkl` checkpoints aren't needed once a config is complete and can be deleted) plus all generated `fig_*_1m.png`/`.pdf` files. Also mention what `DT`/`N_STEPS_TARGET` you ended up using (from the benchmark step) so the comparison against the 15 m results accounts for any difference in temporal resolution. I'll use these to check whether the 15 m paper results (three-regime response: K1-K4 insensitive, K5 transitional, K6 strong divergence with non-monotonic SPACE relief, K7 near-total base-levelling) hold up at native 1 m resolution, or whether the 15 m grid was smoothing out something resolution-dependent.
+richdem is deliberately not used (see "Model configuration" above and
+comments in `02_build_grid_1m.py`).
+
+## Running the pipeline
+
+Place `watershed_of_interest.tif` and `Search tool.xlsx` in the
+repository root, then run:
+
+```bash
+python 01_setup_grid_1m.py
+python 02_build_grid_1m.py
+```
+
+Run all fourteen (model, $K_\mathrm{br}$) configurations. Each takes the
+model (`spim` or `space`) and a K label as arguments and is
+checkpointable/resumable:
+
+```bash
+python 03_run_one_1m_1kyr.py spim K1_3.02e-09
+python 03_run_one_1m_1kyr.py spim K2_1.19e-08
+# ... through K7_1.13e-05, then the same seven for "space"
+```
+
+On Windows, `run_all_1kyr_auto.ps1` runs all fourteen configurations
+automatically, throttled to stay within available system memory:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\run_all_1kyr_auto.ps1
+```
+
+Once all fourteen `results_1kyr_dt10/{model}_{kname}.npz` and
+`_log.json` files exist, generate the figures (order does not matter,
+except that `05_ucs_distribution.py` has no dependency on the model runs
+and can be run at any time):
+
+```bash
+python 04_make_figures_1kyr.py
+python 05_ucs_distribution.py
+python 06_sediment_diagnostics_1kyr.py
+python 07_channel_profiles_1kyr.py
+python 08_final_state_maps_1kyr.py
+python 09_slope_area_1kyr.py
+```
+
+## Computational cost
+
+- **Grid size**: 2670 x 2700 = 7,209,000 total nodes at 1 m resolution.
+- **Memory**: each `float64` node field is ~58 MB at this grid size;
+  Landlab keeps several fields per running configuration (elevation,
+  slope, receiver, drainage area, and for SPACE also soil depth, bedrock
+  elevation, and sediment flux) — budget several GB per configuration,
+  more for SPACE than SPIM.
+- **Disk**: each saved snapshot is ~58 MB; full output across all
+  fourteen configurations can reach the tens-of-GB range depending on
+  the configured snapshot interval.
+
+## Citation
+
+If you use this code, please cite the paper above. Please also cite the
+underlying data sources: the LINZ 1 m LiDAR DEM and the Thor
+rock-strength database (Haag et al., 2025).
+
+## License
+
+MIT — see `LICENSE`.
