@@ -22,21 +22,29 @@ tables in Section 4 and its supplement.
 
 ## What this reproduces
 
-| Script | Output figure(s) | Paper figure label |
-|---|---|---|
-| `05_ucs_distribution.py` | `fig_ucs_distribution_1m.png/.pdf` | `fig:sens_ucs_dist` |
-| `04_make_figures_1kyr.py` | `fig_sensitivity_timeseries_1kyr.png` | `fig:sens_timeseries` |
-| `04_make_figures_1kyr.py` | `fig_diffmaps_by_K_1kyr.png` | `fig:sens_diffmaps` |
-| `04_make_figures_1kyr.py` | `fig_diffmaps_structural_1kyr.png` | `fig:sens_structural` |
-| `06_sediment_diagnostics_1kyr.py` | `fig_soil_depth_maps_1kyr.png` | `fig:sens_soil_depth` (supplement) |
-| `06_sediment_diagnostics_1kyr.py` | `fig_sediment_flux_soil_ts_1kyr.png` | `fig:sens_sediment_flux` (supplement) |
-| `07_channel_profiles_1kyr.py` | `fig_channel_profiles_1kyr.png` | `fig:sens_channel_profiles` (supplement) |
-| `09_slope_area_1kyr.py` | `fig_slope_area_1kyr.png` | `fig:sens_slope_area` (supplement) |
-| `08_final_state_maps_1kyr.py` | `fig_final_state_maps_1kyr.png` | `fig:sens_final_state` (supplement) |
+| Script | Output figure(s) | Figure number | Location |
+|---|---|---|---|
+| `05_ucs_distribution.py` | `fig_ucs_distribution_1m.png/.pdf` | Figure 4 | Main paper |
+| `04_make_figures_1kyr.py` | `fig_sensitivity_timeseries_1kyr.png` | Figure 5 | Main paper |
+| `04_make_figures_1kyr.py` | `fig_diffmaps_by_K_1kyr.png` | Figure 6 | Main paper |
+| `04_make_figures_1kyr.py` | `fig_diffmaps_structural_1kyr.png` | Figure 7 | Main paper |
+| `06_sediment_diagnostics_1kyr.py` | `fig_soil_depth_maps_1kyr.png` | Figure S6 | Supplement |
+| `06_sediment_diagnostics_1kyr.py` | `fig_sediment_flux_soil_ts_1kyr.png` | Figure S7 | Supplement |
+| `07_channel_profiles_1kyr.py` | `fig_channel_profiles_1kyr.png` | Figure S8 | Supplement |
+| `09_slope_area_1kyr.py` | `fig_slope_area_1kyr.png` | Figure S9 | Supplement |
+| `08_final_state_maps_1kyr.py` | `fig_final_state_maps_1kyr.png` | Figure S10 | Supplement |
 
-The sensitivity-configuration summary table (`tab:sens_summary`) and the
-SPACE eroded-volume table (`tab:sens_volume`) are compiled from the
-`results_1kyr_dt10/*_log.json` files written by `03_run_one_1m_1kyr.py`.
+(Figure and table numbers follow the current manuscript draft and may
+shift if content is added, removed, or reordered before publication.)
+
+Three tables are also compiled from the `results_1kyr_dt10/*_log.json`
+files written by `03_run_one_1m_1kyr.py`:
+
+| Content | Table number | Location |
+|---|---|---|
+| Summary of all 14 sensitivity configurations after 1000 yr (relief, mean slope, mean erosion rate, eroded volume) | Table 4 | Main paper |
+| Total SPACE eroded volume per $K_\mathrm{br}$ | Table 5 | Main paper |
+| SPACE mass-balance check (eroded volume vs. cumulative sediment export) | Table S2 | Supplement |
 
 Other figures in the paper (catchment-overview and location maps, the
 conceptual/schematic diagrams, and the coarser 15 m sensitivity run used
