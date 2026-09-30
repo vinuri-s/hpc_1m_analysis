@@ -95,19 +95,16 @@ run_all_1kyr_auto.ps1           Windows launcher for all 14 configs (memory-thro
 requirements.txt                Python dependencies
 ```
 
-## Input data (not included)
+## Input data
 
-This package needs two input files, placed in the repository root, that
-are not distributed with the code:
-
-- **`watershed_of_interest.tif`** — the 1 m LiDAR DEM of the case-study
-  catchment, clipped to the watershed extent. Sourced from Land
-  Information New Zealand's 1 m LiDAR DEM
-  (<https://data.linz.govt.nz/layer/121859-new-zealand-lidar-1m-dem/>),
-  licensed under CC BY 4.0.
-- **`Search tool.xlsx`** — the basalt subset of the Thor rock-strength
-  database (Haag et al., 2025), providing the 341 UCS measurements used
-  to derive the sampled $K_\mathrm{br}$ range in `05_ucs_distribution.py`.
+- **`watershed_of_interest.tif`** (included in this repository) — the 1 m
+  LiDAR DEM of the case-study catchment, clipped to the watershed extent.
+  See "Data licensing and attribution" below for provenance and licence
+  terms.
+- **`Search tool.xlsx`** (not included — place in the repository root
+  before running `05_ucs_distribution.py`) — the basalt subset of the
+  Thor rock-strength database (Haag et al., 2025), providing the 341 UCS
+  measurements used to derive the sampled $K_\mathrm{br}$ range.
 
 ## Requirements
 
@@ -124,8 +121,8 @@ comments in `02_build_grid_1m.py`).
 
 ## Running the pipeline
 
-Place `watershed_of_interest.tif` and `Search tool.xlsx` in the
-repository root, then run:
+Place `Search tool.xlsx` in the repository root (`watershed_of_interest.tif`
+is already included), then run:
 
 ```bash
 python 01_setup_grid_1m.py
@@ -179,9 +176,46 @@ python 09_slope_area_1kyr.py
 ## Citation
 
 If you use this code, please cite the paper above. Please also cite the
-underlying data sources: the LINZ 1 m LiDAR DEM and the Thor
-rock-strength database (Haag et al., 2025).
+underlying data sources: the LINZ 1 m LiDAR DEM, the NIWA REC2
+watersheds layer, and the Thor rock-strength database (Haag et al.,
+2025) — see "Data licensing and attribution" below for the DEM and
+watershed-boundary citations.
 
 ## License
 
-MIT — see `LICENSE`.
+The **code** in this repository (all `.py` and `.ps1` files) is licensed
+under the MIT License — see `LICENSE`.
+
+The **DEM** (`watershed_of_interest.tif`) is third-party data and is
+**not** covered by the MIT licence above. It remains licensed under its
+original terms, CC BY 4.0, as described below. If you reuse or
+redistribute it, attribution to the original data providers is required
+regardless of how the code is licensed.
+
+## Data licensing and attribution
+
+**`watershed_of_interest.tif`** (1 m LiDAR DEM, clipped to the
+case-study catchment):
+
+> The file `watershed_of_interest.tif` is derived from the New Zealand
+> LiDAR 1 m DEM (tile BY24), sourced from the LINZ Data Service
+> (<https://data.linz.govt.nz/layer/121859-new-zealand-lidar-1m-dem/>)
+> and licensed for reuse under CC BY 4.0
+> (<https://creativecommons.org/licenses/by/4.0/>). It has been clipped
+> to the case-study catchment boundary. This redistribution is not
+> endorsed by LINZ.
+
+The catchment boundary used to clip the DEM is itself third-party data:
+
+> The catchment boundary (watershed_1) is derived from the New Zealand
+> Watersheds layer of NIWA's River Environment Classification version 2
+> (REC2 v2.5; NIWA, Taihoro Nukurangi, 2018), available at
+> <https://data-niwa.opendata.arcgis.com/datasets/watersheds> and
+> licensed for reuse under CC BY 4.0
+> (<https://creativecommons.org/licenses/by/4.0/>). The catchment of
+> interest was extracted from this layer. This redistribution is not
+> endorsed by NIWA.
+
+**`Search tool.xlsx`** (not included — see "Input data" above): the
+basalt subset of the Thor rock-strength database. Cite Haag et al.
+(2025) if you obtain and use this file.
