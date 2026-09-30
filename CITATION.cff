@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Native 1 m Resolution Sensitivity Analysis for Stream Power Incision Models"
+abstract: >-
+  Code for the native-resolution (1 m) landscape evolution sensitivity
+  analysis (SPIM vs. SPACE, Landlab) reported in Section 4 of "Quantifying
+  Erodibility in Stream Power Incision Models: Practical Guidance and Model
+  Response Dynamics".
+authors:
+  - family-names: Piyathilake
+    given-names: Vinuri
+    affiliation: "Civil and Environmental Engineering Department, University of Canterbury, New Zealand"
+    email: vinuri.piyathilake@pg.canterbury.ac.nz
+  - family-names: Hughes
+    given-names: "Matthew W."
+    affiliation: "Civil and Environmental Engineering Department, University of Canterbury, New Zealand"
+  - family-names: Wilson
+    given-names: Matthew
+    affiliation: "Geospatial Research Institute, University of Canterbury, New Zealand"
+license: MIT
+repository-code: "https://github.com/vinuri-s/hpc_1m_analysis"
+keywords:
+  - landscape evolution modelling
+  - stream power incision model
+  - SPACE
+  - Landlab
+  - bedrock erodibility
+  - geomorphology
+preferred-citation:
+  type: article
+  title: "Quantifying Erodibility in Stream Power Incision Models: Practical Guidance and Model Response Dynamics"
+  authors:
+    - family-names: Piyathilake
+      given-names: Vinuri
+      affiliation: "Civil and Environmental Engineering Department, University of Canterbury, New Zealand"
+      email: vinuri.piyathilake@pg.canterbury.ac.nz
+    - family-names: Hughes
+      given-names: "Matthew W."
+      affiliation: "Civil and Environmental Engineering Department, University of Canterbury, New Zealand"
+    - family-names: Wilson
+      given-names: Matthew
+      affiliation: "Geospatial Research Institute, University of Canterbury, New Zealand"
+  journal: "Earth Surface Dynamics"
