@@ -175,11 +175,31 @@ python 09_slope_area_1kyr.py
 
 ## Citation
 
-If you use this code, please cite the paper above. Please also cite the
-underlying data sources: the LINZ 1 m LiDAR DEM, the NIWA REC2
-watersheds layer, and the Thor rock-strength database (Haag et al.,
-2025) — see "Data licensing and attribution" below for the DEM and
-watershed-boundary citations.
+If you use this code, please cite the paper above. Please also cite:
+
+- **Landlab**, the modelling toolkit this code is built on:
+  - Hobley, D. E. J., Adams, J. M., Nudurupati, S. S., Hutton, E. W. H.,
+    Gasparini, N. M., Istanbulluoglu, E., and Tucker, G. E.: Creative
+    computing with Landlab: an open-source toolkit for building,
+    coupling, and exploring two-dimensional numerical models of
+    Earth-surface dynamics, *Earth Surface Dynamics*, 5, 21–46,
+    <https://doi.org/10.5194/esurf-5-21-2017>, 2017.
+  - Barnhart, K. R., Hutton, E. W. H., Tucker, G. E., Gasparini, N. M.,
+    Istanbulluoglu, E., Hobley, D. E. J., Lyons, N. J., Mouchene, M.,
+    Nudurupati, S. S., Adams, J. M., and Bandaragoda, C.: Short
+    communication: Landlab v2.0: a software package for Earth surface
+    dynamics, *Earth Surface Dynamics*, 8, 379–397,
+    <https://doi.org/10.5194/esurf-8-379-2020>, 2020.
+- **SPACE**, the sediment-flux-dependent erosion component used here:
+  - Shobe, C. M., Tucker, G. E., and Barnhart, K. R.: The SPACE 1.0
+    model: a Landlab component for 2-D calculation of sediment
+    transport, bedrock erosion, and landscape evolution, *Geoscientific
+    Model Development*, 10, 4577–4604,
+    <https://doi.org/10.5194/gmd-10-4577-2017>, 2017.
+- The underlying data sources: the LINZ 1 m LiDAR DEM, the NIWA REC2
+  watersheds layer, and the Thor rock-strength database (Haag et al.,
+  2025) — see "Data licensing and attribution" below for the DEM and
+  watershed-boundary citations.
 
 ## License
 
